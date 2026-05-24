@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, FormEvent, ChangeEvent } from 'react';
 import { 
   Bell, Plus, Trash2, Volume2, Save, Undo, Download, Upload, 
   Settings, HelpCircle, Check, AlertCircle, Sparkles, X, 
-  AlertTriangle, Eye, EyeOff, Radio, Play, Square, RefreshCcw
+  AlertTriangle, Eye, EyeOff, Radio, Play, Square, RefreshCcw,
+  Timer, Zap
 } from 'lucide-react';
 
 import { Alarm } from './types';
@@ -21,6 +22,11 @@ export default function App() {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [activeAlarm, setActiveAlarm] = useState<Alarm | null>(null);
   
+  // Countdown Timer state
+  const [countdownSeconds, setCountdownSeconds] = useState(0);
+  const [isCountdownRunning, setIsCountdownRunning] = useState(false);
+  const [timerInputMinutes, setTimerInputMinutes] = useState(5);
+
   // Custom Snooze state
   const [snoozedAlarms, setSnoozedAlarms] = useState<{ alarmId: string; triggerAt: number }[]>([]);
 
@@ -34,6 +40,7 @@ export default function App() {
   const [volumeInput, setVolumeInput] = useState(0.8);
   const [simulateCallInput, setSimulateCallInput] = useState(false);
   const [vibrateInput, setVibrateInput] = useState(true);
+  const [isStrongInput, setIsStrongInput] = useState(false);
   const [showNotificationInput, setShowNotificationInput] = useState(true);
 
   // Editing state mapping
@@ -84,6 +91,38 @@ export default function App() {
     }
   }, [activeAlarm, isAdding]); // Refresh when major UI states change
 
+  // --- Countdown Timer Logic ---
+  useEffect(() => {
+    let interval: any;
+    if (isCountdownRunning && countdownSeconds > 0) {
+      interval = setInterval(() => {
+        setCountdownSeconds((prev) => prev - 1);
+      }, 1000);
+    } else if (countdownSeconds === 0 && isCountdownRunning) {
+      setIsCountdownRunning(false);
+      // Trigger Timer Alarm
+      const timerAlarm: Alarm = {
+        id: 'timer-' + Date.now(),
+        time: '倒數結束',
+        label: '⏱️ 倒數計時時間到！',
+        repeatType: 'once',
+        repeatDays: [],
+        soundType: 'buzzer',
+        volume: 0.9,
+        simulateCall: false,
+        vibrate: true,
+        showNotification: true,
+        enabled: true,
+        isStrong: false,
+        snoozeCount: 0,
+        lastTriggeredDate: null
+      };
+      setActiveAlarm(timerAlarm);
+      triggerAlarmEffects(timerAlarm);
+    }
+    return () => clearInterval(interval);
+  }, [isCountdownRunning, countdownSeconds]);
+
   // Load alarms initial
   useEffect(() => {
     setAlarms(getAlarms());
@@ -105,16 +144,20 @@ export default function App() {
   // Sound and vibration loop triggering helper
   const triggerAlarmEffects = (alarm: Alarm) => {
     // 1. Play synthesized continuous tone / melody
-    startSound(alarm.soundType, alarm.volume);
+    const volume = alarm.isStrong ? Math.min(alarm.volume * 1.5, 1.0) : alarm.volume;
+    startSound(alarm.soundType, volume);
 
     // 2. Trigger navigator vibration API if toggled and supported
     if (alarm.vibrate) {
       if ('vibrate' in navigator) {
-        navigator.vibrate([300, 100, 300, 100, 300]);
+        const pattern = alarm.isStrong 
+          ? [500, 100, 500, 100, 500, 100, 800] 
+          : [300, 100, 300, 100, 300];
+        navigator.vibrate(pattern);
         // vibrate repeatedly
         vibrationIntervalRef.current = setInterval(() => {
-          navigator.vibrate([300, 100, 300, 100, 300]);
-        }, 1500);
+          navigator.vibrate(pattern);
+        }, alarm.isStrong ? 1000 : 1500);
       }
     }
 
@@ -279,6 +322,7 @@ export default function App() {
       vibrate: vibrateInput,
       showNotification: showNotificationInput,
       enabled: true,
+      isStrong: isStrongInput,
       snoozeCount: 0,
       lastTriggeredDate: null
     };
@@ -296,6 +340,7 @@ export default function App() {
     setVolumeInput(0.8);
     setSimulateCallInput(false);
     setVibrateInput(true);
+    setIsStrongInput(false);
     setShowNotificationInput(true);
   };
 
@@ -531,6 +576,66 @@ export default function App() {
         <ClockDashboard />
       </section>
 
+      {/* --- Quick Countdown Timer Section --- */}
+      <section className="mb-8 rounded-[32px] border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isCountdownRunning ? 'bg-cyan-500 text-[#050508] animate-pulse' : 'bg-white/5 text-cyan-400'}`}>
+              <Timer className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">快速倒數計時器</h3>
+              <p className="text-xs text-slate-400">設定分鐘數後立即開始倒數</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            {isCountdownRunning ? (
+              <div className="flex items-center gap-6 bg-black/40 px-6 py-3 rounded-2xl border border-cyan-500/30 w-full justify-between md:justify-start">
+                <div className="text-3xl font-black font-mono text-cyan-400 tracking-tighter">
+                  {Math.floor(countdownSeconds / 60).toString().padStart(2, '0')}:
+                  {(countdownSeconds % 60).toString().padStart(2, '0')}
+                </div>
+                <button
+                  onClick={() => {
+                    setIsCountdownRunning(false);
+                    setCountdownSeconds(0);
+                  }}
+                  className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-rose-500/20"
+                >
+                  取消倒數
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="flex items-center bg-black/40 rounded-2xl border border-white/10 px-4 py-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    value={timerInputMinutes}
+                    onChange={(e) => setTimerInputMinutes(parseInt(e.target.value) || 0)}
+                    className="w-12 bg-transparent text-xl font-bold font-mono text-white focus:outline-none text-center"
+                  />
+                  <span className="text-xs text-slate-500 font-bold ml-1">MIN</span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (timerInputMinutes > 0) {
+                      setCountdownSeconds(timerInputMinutes * 60);
+                      setIsCountdownRunning(true);
+                    }
+                  }}
+                  className="bg-cyan-500 hover:bg-cyan-600 text-[#050508] px-6 py-3 rounded-2xl text-sm font-black transition-all shadow-lg shadow-cyan-500/20 active:scale-95"
+                >
+                  開始倒數
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* 3. Primary Workspace Layout Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
@@ -707,6 +812,21 @@ export default function App() {
                       className="sr-only peer"
                     />
                     <div className="w-9 h-5 bg-white/10 rounded-full peer peer-checked:bg-cyan-500 relative transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-4" />
+                  </label>
+
+                  {/* Strong Wake-up */}
+                  <label className="flex items-center justify-between text-xs cursor-pointer select-none group">
+                    <span className="flex items-center gap-1.5 text-rose-400 font-bold">
+                      <Zap className="w-3.5 h-3.5" />
+                      啟動「強力叫醒」模式
+                    </span>
+                    <input 
+                      type="checkbox"
+                      checked={isStrongInput}
+                      onChange={(e) => setIsStrongInput(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-white/10 rounded-full peer peer-checked:bg-rose-500 relative transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-4 shadow-[0_0_10px_rgba(244,63,94,0)] peer-checked:shadow-[0_0_10px_rgba(244,63,94,0.4)]" />
                   </label>
                 </div>
 
@@ -963,6 +1083,16 @@ export default function App() {
                               />
                               顯示提示訊息與文字
                             </label>
+
+                            <label className="flex items-center gap-1.5 cursor-pointer text-rose-400 font-bold">
+                              <input 
+                                type="checkbox"
+                                checked={alarm.isStrong}
+                                onChange={(e) => handleSaveEdit({ ...alarm, isStrong: e.target.checked })}
+                                className="rounded text-rose-500 bg-black border-white/10"
+                              />
+                              強力叫醒模式
+                            </label>
                           </div>
 
                           {/* Repeater Day Pickers inline editor if weekly repeat type selected */}
@@ -1073,6 +1203,12 @@ export default function App() {
                                 {alarm.showNotification && (
                                   <span className="text-[9px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded font-mono font-bold uppercase">
                                     Text Msg 提示
+                                  </span>
+                                )}
+                                {alarm.isStrong && (
+                                  <span className="text-[9px] bg-rose-500/10 border border-rose-500/20 text-rose-400 px-1.5 py-0.5 rounded font-mono font-bold uppercase flex items-center gap-0.5">
+                                    <Zap className="w-2 h-2" />
+                                    Strong 強力
                                   </span>
                                 )}
                               </div>

@@ -10,6 +10,7 @@ export interface Alarm {
   vibrate: boolean; // 是否啟用裝置震動
   showNotification: boolean; // 是否顯示提示訊息與通知
   enabled: boolean; // 是否啟用
+  isStrong: boolean; // 是否為強提醒 (叫起床用)
   snoozeCount: number;
   lastTriggeredDate: string | null; // "YYYY-MM-DD" style to prevent double ring
 }

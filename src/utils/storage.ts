@@ -47,6 +47,7 @@ export const DEFAULT_ALARMS: Alarm[] = [
     vibrate: true,
     showNotification: true,
     enabled: true,
+    isStrong: false,
     snoozeCount: 0,
     lastTriggeredDate: null
   },
@@ -62,6 +63,7 @@ export const DEFAULT_ALARMS: Alarm[] = [
     vibrate: true,
     showNotification: true,
     enabled: false,
+    isStrong: false,
     snoozeCount: 0,
     lastTriggeredDate: null
   },
@@ -77,6 +79,7 @@ export const DEFAULT_ALARMS: Alarm[] = [
     vibrate: false,
     showNotification: true,
     enabled: false,
+    isStrong: false,
     snoozeCount: 0,
     lastTriggeredDate: null
   }
@@ -154,6 +157,7 @@ export function importConfig(jsonString: string): Alarm[] {
       vibrate: !!item.vibrate,
       showNotification: item.showNotification !== undefined ? !!item.showNotification : true,
       enabled: item.enabled !== undefined ? !!item.enabled : true,
+      isStrong: !!item.isStrong,
       snoozeCount: 0,
       lastTriggeredDate: null
     } as Alarm;

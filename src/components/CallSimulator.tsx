@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Phone, PhoneOff, User, MessageCircle, Volume2 } from 'lucide-react';
+import { Phone, PhoneOff, User, MessageCircle, Volume2, Zap } from 'lucide-react';
 import { Alarm } from '../types';
 
 interface CallSimulatorProps {
@@ -53,6 +53,7 @@ export default function CallSimulator({ activeAlarm, onDecline, onAccept }: Call
 
         <h1 className="text-3xl font-extrabold tracking-wide mb-2 text-white">
           {activeAlarm.label || '智慧提醒'}
+          {activeAlarm.isStrong && <Zap className="inline-block w-6 h-6 text-rose-500 ml-2 animate-pulse" />}
         </h1>
         <p className="text-md text-cyan-400 tracking-wider font-mono uppercase">
           {callState === 'ringing' ? '模擬來電中...' : '系統接聽通話中'}
