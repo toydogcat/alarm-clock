@@ -25,8 +25,9 @@ export default function App() {
   // Countdown Timer state
   const [countdownSeconds, setCountdownSeconds] = useState(0);
   const [isCountdownRunning, setIsCountdownRunning] = useState(false);
-  const [timerInputHours, setTimerInputHours] = useState(0);
+  const [timerInputHours, setTimerInputHours] = useState(8);
   const [timerInputMinutes, setTimerInputMinutes] = useState(5);
+  const [countdownStartTime, setCountdownStartTime] = useState<string | null>(null);
 
   // Stopwatch state
   const [stopwatchSeconds, setStopwatchSeconds] = useState(0);
@@ -631,15 +632,24 @@ export default function App() {
             <div className="flex items-center gap-4 w-full">
               {isCountdownRunning ? (
                 <div className="flex items-center gap-6 bg-black/40 px-6 py-3 rounded-2xl border border-cyan-500/30 w-full justify-between">
-                  <div className="text-3xl font-black font-mono text-cyan-400 tracking-tighter">
-                    {Math.floor(countdownSeconds / 3600).toString().padStart(2, '0')}:
-                    {Math.floor((countdownSeconds % 3600) / 60).toString().padStart(2, '0')}:
-                    {(countdownSeconds % 60).toString().padStart(2, '0')}
+                  <div className="flex flex-col gap-1 flex-1">
+                    <div className="text-3xl font-black font-mono text-cyan-400 tracking-tighter">
+                      {Math.floor(countdownSeconds / 3600).toString().padStart(2, '0')}:
+                      {Math.floor((countdownSeconds % 3600) / 60).toString().padStart(2, '0')}:
+                      {(countdownSeconds % 60).toString().padStart(2, '0')}
+                    </div>
+                    {countdownStartTime && (
+                      <div className="text-[10px] text-slate-500 font-bold flex items-center gap-1">
+                        <Play className="w-2.5 h-2.5 fill-current" />
+                        開始於 {countdownStartTime}
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => {
                       setIsCountdownRunning(false);
                       setCountdownSeconds(0);
+                      setCountdownStartTime(null);
                     }}
                     className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-rose-500/20"
                   >
@@ -677,6 +687,9 @@ export default function App() {
                     onClick={() => {
                       const totalSecs = (timerInputHours * 3600) + (timerInputMinutes * 60);
                       if (totalSecs > 0) {
+                        const now = new Date();
+                        const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+                        setCountdownStartTime(timeStr);
                         setCountdownSeconds(totalSecs);
                         setIsCountdownRunning(true);
                       }
