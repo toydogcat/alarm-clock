@@ -3,7 +3,7 @@ import {
   Bell, Plus, Trash2, Volume2, Save, Undo, Download, Upload, 
   Settings, HelpCircle, Check, AlertCircle, Sparkles, X, 
   AlertTriangle, Eye, EyeOff, Radio, Play, Square, RefreshCcw,
-  Timer, Zap
+  Timer, Zap, Stopwatch, Flag
 } from 'lucide-react';
 
 import { Alarm } from './types';
@@ -25,7 +25,13 @@ export default function App() {
   // Countdown Timer state
   const [countdownSeconds, setCountdownSeconds] = useState(0);
   const [isCountdownRunning, setIsCountdownRunning] = useState(false);
+  const [timerInputHours, setTimerInputHours] = useState(0);
   const [timerInputMinutes, setTimerInputMinutes] = useState(5);
+
+  // Stopwatch state
+  const [stopwatchSeconds, setStopwatchSeconds] = useState(0);
+  const [isStopwatchRunning, setIsStopwatchRunning] = useState(false);
+  const [stopwatchLaps, setStopwatchLaps] = useState<number[]>([]);
 
   // Custom Snooze state
   const [snoozedAlarms, setSnoozedAlarms] = useState<{ alarmId: string; triggerAt: number }[]>([]);
@@ -122,6 +128,17 @@ export default function App() {
     }
     return () => clearInterval(interval);
   }, [isCountdownRunning, countdownSeconds]);
+
+  // --- Stopwatch Logic ---
+  useEffect(() => {
+    let interval: any;
+    if (isStopwatchRunning) {
+      interval = setInterval(() => {
+        setStopwatchSeconds((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isStopwatchRunning]);
 
   // Load alarms initial
   useEffect(() => {
@@ -466,6 +483,13 @@ export default function App() {
     }, 1500);
   };
 
+  const formatStopwatchTime = (totalSeconds: number) => {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="min-h-screen pb-20 relative px-4 sm:px-6 w-full max-w-5xl mx-auto flex flex-col font-sans">
       
@@ -576,65 +600,155 @@ export default function App() {
         <ClockDashboard />
       </section>
 
-      {/* --- Quick Countdown Timer Section --- */}
-      <section className="mb-8 rounded-[32px] border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isCountdownRunning ? 'bg-cyan-500 text-[#050508] animate-pulse' : 'bg-white/5 text-cyan-400'}`}>
-              <Timer className="w-6 h-6" />
+      {/* --- Quick Countdown & Stopwatch Section --- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        {/* Timer Card */}
+        <section className="rounded-[32px] border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md">
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isCountdownRunning ? 'bg-cyan-500 text-[#050508] animate-pulse' : 'bg-white/5 text-cyan-400'}`}>
+                <Timer className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">快速倒數計時器</h3>
+                <p className="text-xs text-slate-400">設定時分後立即開始倒數</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-white">快速倒數計時器</h3>
-              <p className="text-xs text-slate-400">設定分鐘數後立即開始倒數</p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            {isCountdownRunning ? (
-              <div className="flex items-center gap-6 bg-black/40 px-6 py-3 rounded-2xl border border-cyan-500/30 w-full justify-between md:justify-start">
-                <div className="text-3xl font-black font-mono text-cyan-400 tracking-tighter">
-                  {Math.floor(countdownSeconds / 60).toString().padStart(2, '0')}:
-                  {(countdownSeconds % 60).toString().padStart(2, '0')}
+            <div className="flex items-center gap-4 w-full">
+              {isCountdownRunning ? (
+                <div className="flex items-center gap-6 bg-black/40 px-6 py-3 rounded-2xl border border-cyan-500/30 w-full justify-between">
+                  <div className="text-3xl font-black font-mono text-cyan-400 tracking-tighter">
+                    {Math.floor(countdownSeconds / 3600).toString().padStart(2, '0')}:
+                    {Math.floor((countdownSeconds % 3600) / 60).toString().padStart(2, '0')}:
+                    {(countdownSeconds % 60).toString().padStart(2, '0')}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsCountdownRunning(false);
+                      setCountdownSeconds(0);
+                    }}
+                    className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-rose-500/20"
+                  >
+                    取消
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    setIsCountdownRunning(false);
-                    setCountdownSeconds(0);
-                  }}
-                  className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-rose-500/20"
-                >
-                  取消倒數
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <div className="flex items-center bg-black/40 rounded-2xl border border-white/10 px-4 py-2">
-                  <input
-                    type="number"
-                    min="1"
-                    max="999"
-                    value={timerInputMinutes}
-                    onChange={(e) => setTimerInputMinutes(parseInt(e.target.value) || 0)}
-                    className="w-12 bg-transparent text-xl font-bold font-mono text-white focus:outline-none text-center"
-                  />
-                  <span className="text-xs text-slate-500 font-bold ml-1">MIN</span>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+                  <div className="flex items-center gap-2 bg-black/40 rounded-2xl border border-white/10 px-4 py-2 w-full justify-center">
+                    <div className="flex flex-col items-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={timerInputHours}
+                        onChange={(e) => setTimerInputHours(parseInt(e.target.value) || 0)}
+                        className="w-10 bg-transparent text-xl font-bold font-mono text-white focus:outline-none text-center"
+                      />
+                      <span className="text-[10px] text-slate-500 font-bold">HR</span>
+                    </div>
+                    <span className="text-white font-bold">:</span>
+                    <div className="flex flex-col items-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={timerInputMinutes}
+                        onChange={(e) => setTimerInputMinutes(parseInt(e.target.value) || 0)}
+                        className="w-10 bg-transparent text-xl font-bold font-mono text-white focus:outline-none text-center"
+                      />
+                      <span className="text-[10px] text-slate-500 font-bold">MIN</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const totalSecs = (timerInputHours * 3600) + (timerInputMinutes * 60);
+                      if (totalSecs > 0) {
+                        setCountdownSeconds(totalSecs);
+                        setIsCountdownRunning(true);
+                      }
+                    }}
+                    className="bg-cyan-500 hover:bg-cyan-600 text-[#050508] px-6 py-4 rounded-2xl text-sm font-black transition-all shadow-lg shadow-cyan-500/20 active:scale-95 w-full sm:w-auto whitespace-nowrap"
+                  >
+                    開始
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    if (timerInputMinutes > 0) {
-                      setCountdownSeconds(timerInputMinutes * 60);
-                      setIsCountdownRunning(true);
-                    }
-                  }}
-                  className="bg-cyan-500 hover:bg-cyan-600 text-[#050508] px-6 py-3 rounded-2xl text-sm font-black transition-all shadow-lg shadow-cyan-500/20 active:scale-95"
-                >
-                  開始倒數
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* Stopwatch Card */}
+        <section className="rounded-[32px] border border-white/10 bg-white/[0.02] p-6 backdrop-blur-md">
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isStopwatchRunning ? 'bg-indigo-500 text-white animate-pulse' : 'bg-white/5 text-indigo-400'}`}>
+                <Stopwatch className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">數位碼表</h3>
+                <p className="text-xs text-slate-400">精確計時與分圈記錄功能</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between bg-black/40 px-6 py-3 rounded-2xl border border-white/10 w-full">
+                <div className="text-3xl font-black font-mono text-indigo-400 tracking-tighter">
+                  {formatStopwatchTime(stopwatchSeconds)}
+                </div>
+                <div className="flex items-center gap-2">
+                  {isStopwatchRunning ? (
+                    <button
+                      onClick={() => setIsStopwatchRunning(false)}
+                      className="bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-rose-500/20"
+                    >
+                      停止
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setIsStopwatchRunning(true)}
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-500/20"
+                    >
+                      {stopwatchSeconds > 0 ? '繼續' : '開始'}
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setIsStopwatchRunning(false);
+                      setStopwatchSeconds(0);
+                      setStopwatchLaps([]);
+                    }}
+                    className="bg-white/5 hover:bg-white/10 text-slate-400 px-4 py-2 rounded-xl text-xs font-bold transition-all border border-white/5"
+                  >
+                    重設
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={!isStopwatchRunning}
+                  onClick={() => setStopwatchLaps([stopwatchSeconds, ...stopwatchLaps].slice(0, 5))}
+                  className="flex-1 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-indigo-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <Flag className="w-3 h-3 inline-block mr-1 mb-0.5" />
+                  紀錄分圈 (LAP)
+                </button>
+              </div>
+
+              {stopwatchLaps.length > 0 && (
+                <div className="flex flex-wrap gap-2 animate-fade-in">
+                  {stopwatchLaps.map((lap, i) => (
+                    <span key={i} className="text-[10px] font-mono bg-white/5 border border-white/10 px-2 py-1 rounded text-slate-400">
+                      Lap {stopwatchLaps.length - i}: {formatStopwatchTime(lap)}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
 
       {/* 3. Primary Workspace Layout Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
