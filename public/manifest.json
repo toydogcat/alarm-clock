@@ -1,0 +1,17 @@
+{
+  "short_name": "小鬧鐘",
+  "name": "小鬧鐘 - 智慧 PWA 模擬來電與定時提醒器",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#121214",
+  "theme_color": "#F59E0B",
+  "display": "standalone",
+  "orientation": "portrait"
+}

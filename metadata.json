@@ -1,0 +1,6 @@
+{
+  "name": "小鬧鐘",
+  "description": "具有自訂音樂、模擬來電、震動、多重時間重複設定、Cookie/Local記憶備份與 PWA 提醒功能的精緻網頁鬧鐘。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

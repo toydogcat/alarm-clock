@@ -1,2 +1,2 @@
 # alarm-clock
-The Alarm Clock.
+The [Alarm Clock](https://toydogcat.github.io/alarm-clock/).

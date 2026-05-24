@@ -34,3 +34,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Luna AI Hub assets
+TMP/
+temp/
+*.pdf
+*.mp4
+*.zip
+dist/
