@@ -92,10 +92,23 @@ export default function App() {
 
   // --- Luna AI Hub: Vercount Refresh (for SPA logic) ---
   useEffect(() => {
+    const triggerVercount = () => {
+      if ((window as any).vercount && typeof (window as any).vercount.fetch === 'function') {
+        (window as any).vercount.fetch();
+      }
+    };
+
+    // Initial delay to ensure DOM is ready
+    const timer = setTimeout(triggerVercount, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Refresh on major UI changes
+  useEffect(() => {
     if ((window as any).vercount && typeof (window as any).vercount.fetch === 'function') {
       (window as any).vercount.fetch();
     }
-  }, [activeAlarm, isAdding]); // Refresh when major UI states change
+  }, [activeAlarm, isAdding]); 
 
   // --- Countdown Timer Logic ---
   useEffect(() => {
@@ -1388,7 +1401,7 @@ export default function App() {
 
       {/* Footer / Stats Area */}
       <footer className="mt-12 py-6 border-t border-white/5 flex flex-col items-center gap-4">
-        <div className="flex items-center gap-6 text-[10px] font-bold tracking-widest uppercase text-slate-500">
+        <div className="flex flex-wrap justify-center items-center gap-6 text-[10px] font-bold tracking-widest uppercase text-slate-500">
           <span className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse"></span>
             全站瀏覽量: <span id="vercount_value_site_pv" className="text-cyan-400">--</span> 次
@@ -1397,6 +1410,12 @@ export default function App() {
             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
             獨立訪客: <span id="vercount_value_site_uv" className="text-indigo-400">--</span> 人
           </span>
+          <button 
+            onClick={() => (window as any).vercount?.fetch()}
+            className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-md text-[9px] text-slate-400 hover:text-cyan-400 transition-all active:scale-95"
+          >
+            手動刷新計數
+          </button>
         </div>
         <p className="text-[10px] text-slate-600 font-medium">
           © {new Date().getFullYear()} 小鬧鐘 PWA • Designed for Luna AI Hub
