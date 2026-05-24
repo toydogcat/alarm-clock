@@ -3,7 +3,7 @@ import {
   Bell, Plus, Trash2, Volume2, Save, Undo, Download, Upload, 
   Settings, HelpCircle, Check, AlertCircle, Sparkles, X, 
   AlertTriangle, Eye, EyeOff, Radio, Play, Square, RefreshCcw,
-  Timer, Zap, Stopwatch, Flag
+  Timer, Zap, Hourglass, Flag
 } from 'lucide-react';
 
 import { Alarm } from './types';
@@ -683,7 +683,7 @@ export default function App() {
           <div className="flex flex-col gap-6">
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isStopwatchRunning ? 'bg-indigo-500 text-white animate-pulse' : 'bg-white/5 text-indigo-400'}`}>
-                <Stopwatch className="w-6 h-6" />
+                <Hourglass className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white">數位碼表</h3>
